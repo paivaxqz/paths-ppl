@@ -1,0 +1,15 @@
+tools/
+ref/
+*.exe
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.o
+*.dll
+.vs/
+Debug/
+Release/
+x64/
+.claude/
