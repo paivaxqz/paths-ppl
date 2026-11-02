@@ -47,16 +47,56 @@ int yara_callback(YR_SCAN_CONTEXT* context, int message, void* message_data, voi
 
 void initializeGenericRules() {
 
-    // 1. TODO: placeholder - preencher com as strings novas. Mantido compilando (condition false).
-    addGenericRule("Specifics B", R"YR(
+    // 1. cheat — produtos/auth/C2 conhecidos (marcadores fortes; evita FP de "aimbot" solto)
+    addGenericRule("cheat", R"YR(
+import "pe"
+
 rule cheat
 {
   meta:
-    description = "Specifics B - TODO: refazer strings"
+    description = "Produtos, auth panels e C2 de cheat conhecidos"
+
   strings:
-    $todo = "__PATHS_TODO_PLACEHOLDER__"
+    // produtos / loaders
+    $p1 = "falconmemx64" ascii wide nocase
+    $p2 = "FalconMem" ascii wide nocase
+    $p3 = "XRCService" ascii wide nocase
+    $p4 = "XRC Products" ascii wide nocase
+    $p5 = "user-agent: xrc" ascii wide nocase
+    $p6 = "Precision Priv" ascii wide nocase
+    $p7 = "vsbypass" ascii wide nocase
+    $p8 = "Valorant-ColorBot.pdb" ascii wide nocase
+    $p9 = "RedLotusAltChecker" ascii wide nocase
+    $p10 = "costura.memory.dll.compressed" ascii wide nocase
+    $p11 = "BruxoMem" ascii wide nocase
+    $p12 = "poco-poco" ascii wide nocase
+
+    // painel / bypass copy
+    $c1 = "Iniciando Bypass" ascii wide nocase
+    $c2 = "Clean Traces" ascii wide nocase
+    $c3 = "Fuck Log" ascii wide nocase
+    $c4 = "Enable Chams" ascii wide nocase
+    $c5 = "Load Chams" ascii wide nocase
+    $c6 = "Load Esp" ascii wide nocase
+    $c7 = "isDriverMapped" ascii wide
+    $c8 = "MapDriverSilent" ascii wide
+
+    // auth / C2
+    $a1 = "fluxauth.com" ascii wide nocase
+    $a2 = "hitlojas.squareweb.app" ascii wide nocase
+    $a3 = "lidiamartinipsicologia.com" ascii wide nocase
+    $a4 = "bscamisas.online" ascii wide nocase
+    $a5 = "unpained-nonjudicative-yuette.ngrok-free.dev" ascii wide nocase
+    $a6 = "3.142.247.110" ascii wide
+    $a7 = "177.135.117.23" ascii wide
+
   condition:
-    false and $todo
+    uint16(0) == 0x5A4D and pe.is_pe and
+    (
+      any of ($p*) or
+      any of ($a*) or
+      2 of ($c*)
+    )
 }
 )YR");
 
