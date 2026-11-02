@@ -38,3 +38,7 @@ ref/            third-party references (system-informer, pplfault)
 - windows 10/11
 - MSVC (Visual Studio Build Tools)
 - admin / elevated prompt for PPL operations
+
+## pplscan
+
+Fluxo único em C++ (`pplscan.exe`): dump → paths → analyzer `paths` → consulta USN Journal dos arquivos deletados. Sem Python.
