@@ -47,246 +47,302 @@ int yara_callback(YR_SCAN_CONTEXT* context, int message, void* message_data, voi
 
 void initializeGenericRules() {
 
+    // 1. TODO: placeholder - preencher com as strings novas. Mantido compilando (condition false).
     addGenericRule("Specifics B", R"(
-import "pe" 
-
 rule cheat
 {
   meta:
-    description = "hellomoto"
-
+    description = "Specifics B - TODO: refazer strings"
   strings:
-    $a1 = "Valorant-ColorBot.pdb" nocase
-    $a2 = "XRC Products" nocase
-    $a3 = "Enable Chams" nocase
-    $a4 = "Load Esp" nocase
-    $a5 = "Fuck Log" nocase
-    $a6 = "3.142.247.110" nocase
-    $a7 = "Clean Traces" nocase
-    $a8 = "libil2cpp.so" nocase
-    $a9 = "poco-poco" nocase
-    $a10 = "Iniciando Bypass" nocase
-    $a11 = "user-agent: xrc" nocase
-    $a12 = "Precision Priv" nocase
-    $a13 = "falconmemx64" nocase
-    $a14 = "costura.memory.dll.compressed" nocase
-    $a15 = "glDrawElementsInstacedBaseVertex" nocase
-    $a16 = "XRCService" nocase
-    $a17 = "Load Chams" nocase
-    $a18 = "antena" nocase
-    $a19 = "chams" nocase
-    $a20 = "aimbot" nocase
-    $a21 = "unpained-nonjudicative-yuette.ngrok-free.dev" nocase
-    $a22 = "hitlojas.squareweb.app" nocase
-    $a23 = "lidiamartinipsicologia.com" nocase
-    $a24 = "bscamisas.online" nocase
-    $a25 = "177.135.117.23" nocase
-    $a26 = "fluxauth.com" nocase
-    $a27 = "isDriverMapped" nocase
-    $a28 = "MapDriverSilent" nocase
-    $a29 = "vsbypass" nocase
-
-
+    $todo = "__NPMURIEL_TODO_PLACEHOLDER__"
   condition:
-    any of ($a*)
+    false and $todo
 }
-    
 )");
 
+    // 2 + 7 + 8 unificadas: entropy do arquivo inteiro OU de alguma secao PE
     addGenericRule("entropy", R"(
+import "pe"
 import "math"
 
 rule entropy
 {
   meta:
-    Author = "DosX"
-
+    description = "PE com entropy alta (arquivo >= 7.0 ou secao > 7.0)"
   condition:
-    uint32(uint32(0x3C)) == 0x00004550 and
-    math.entropy(0, filesize) >= 7.0
+    uint16(0) == 0x5A4D and pe.is_pe and filesize > 4KB and
+    (
+      math.entropy(0, filesize) >= 7.0 or
+      for any s in pe.sections : (
+        s.raw_data_size > 1024 and
+        s.name != ".rsrc" and
+        math.entropy(s.raw_data_offset, s.raw_data_size) > 7.0
+      )
+    )
 }
 )");
 
+    // 3. Packers
     addGenericRule("murielson", R"(
+import "pe"
 
 rule empacotamentoruim
 {
-    strings:
-        $section1 = "UPX0"
-        $section2 = "UPX1"
-        $section3 = "UPX2"
-        $versionId = "UPX!"
-    condition:
-            any of them
+  meta:
+    description = "PE empacotado (UPX, MPRESS, ASPack, Themida, VMProtect, Enigma, PECompact, Obsidium...)"
+  strings:
+    $upx_magic = "UPX!"
+    $mpress    = "MPRESS"
+    $aspack    = "ASPack" nocase
+    $pecompact = "PECompact2"
+    $enigma    = "Enigma protector" nocase
+    $obsidium  = "Obsidium" nocase
+  condition:
+    uint16(0) == 0x5A4D and pe.is_pe and
+    (
+      for any s in pe.sections : (
+        s.name == "UPX0" or s.name == "UPX1" or s.name == "UPX2" or s.name == ".UPX" or
+        s.name == ".MPRESS1" or s.name == ".MPRESS2" or
+        s.name == ".aspack" or s.name == ".adata" or
+        s.name == ".themida" or s.name == ".winlice" or s.name == ".boot" or
+        s.name == ".vmp0" or s.name == ".vmp1" or s.name == ".vmp2" or
+        s.name == ".enigma1" or s.name == ".enigma2" or
+        s.name == "PEC2" or s.name == "PEC2TO" or s.name == "pec1" or
+        s.name == ".obsidium"
+      ) or
+      $upx_magic in (0..0x1000) or
+      $mpress in (0..0x1000) or
+      any of ($aspack, $pecompact, $enigma, $obsidium) in (0..0x2000)
+    )
 }
-
-
 )");
 
+    // 4. Obfuscators .NET (1 marcador forte OU 2 fracos)
     addGenericRule("Obfuscated__FakeSignatures", R"(
+import "pe"
+
 rule Obfuscated__FakeSignatures
 {
-    meta:
-        Author = "DosX"
-    strings:
-        $_1 = "Xenocode.Client.Attributes.AssemblyAttributes.ProcessedByXenocode"
-        $_2 = "CryptoObfuscator.ProtectedWithCryptoObfuscatorAttribute"
-        $_3 = "SecureTeam.Attributes.ObfuscatedByAgileDotNetAttribute"
-        $_4 = "Xenocode.Client.Attributes.AssemblyAttributes"
-        $_5 = "SmartAssembly.Attributes.PoweredByAttribute"
-        $_6 = "ObfuscatedByAgileDotNetAttribute"
-        $_7 = "NineRays.Obfuscator.Evaluation"
-        $_8 = "ObfuscatedByCliSecureAttribute"
-        $_9 = "BabelObfuscatorAttribute"
-        $_10 = "AsStrongAsFuckAttribute"
-        $_11 = "Macrobject.Obfuscator"
-        $_12 = "DotfuscatorAttribute"
-        $_13 = "CodeWallTrialVersion"
-        $_14 = "ConfusedByAttribute"
-        $_15 = "ObfuscatedByGoliath"
-        $_16 = "NETSpider.Attribute"
-        $_17 = "NineRays.Obfuscator"
-        $_18 = "PoweredByAttribute"
-        $_19 = "RustemSoft.Skater"
-        $_20 = "BabelAttribute"
-        $_21 = "YanoAttribute"
-        $_22 = "EMyPID_8234_"
-        $_23 = "ZYXDNGuarder"
-        $_24 = "Sixxpack"
-        $_25 = "____KILL"
-        $_26 = "Reactor"
-    condition:
-        2 of them
+  meta:
+    description = "Assembly .NET ofuscado"
+  strings:
+    $s1  = "ConfusedByAttribute" ascii wide
+    $s2  = "Confuser.Core" ascii wide
+    $s3  = "ConfuserEx v" ascii wide
+    $s4  = "DotfuscatorAttribute" ascii wide
+    $s5  = "SmartAssembly.Attributes" ascii wide
+    $s6  = "PoweredByAttribute" ascii wide
+    $s7  = "BabelObfuscatorAttribute" ascii wide
+    $s8  = "Xenocode.Client.Attributes" ascii wide
+    $s9  = "CryptoObfuscator" ascii wide
+    $s10 = "ObfuscatedByGoliath" ascii wide
+    $s11 = "Eazfuscator" ascii wide
+    $s12 = "<PrivateImplementationDetails>{" ascii wide
+    $s13 = "KoiVM" ascii wide
+    $s14 = "Inx .NET Obfuscator" ascii wide
+    $s15 = "ObfuscatedByAgileDotNet" ascii wide
+    $s16 = "AgileDotNetRT" ascii wide
+    $s17 = "__DNGuard" ascii wide
+    $s18 = "MaxtoCode" ascii wide
+    $s19 = "Spices.Net" ascii wide
+    $s20 = "YanoAttribute" ascii wide
+    $s21 = "NETGuard" ascii wide
+    $s22 = "BitMono" ascii wide
+    $w1  = "costura." ascii wide nocase
+    $w2  = "ProcessedByFody" ascii wide
+    $w3  = "AssemblyLoader" ascii wide
+    $w4  = "SuppressIldasmAttribute" ascii wide
+    $w5  = "VMProtect" ascii wide
+    $w6  = ".NET Reactor" ascii wide
+    $w7  = "Babel" ascii wide
+  condition:
+    uint16(0) == 0x5A4D and pe.is_pe and
+    (pe.imports("mscoree.dll", "_CorExeMain") or pe.imports("mscoree.dll", "_CorDllMain") or
+     pe.data_directories[14].virtual_address != 0) and
+    (any of ($s*) or 2 of ($w*))
 }
 )");
 
-
+    // 5. AnyDesk fake em .NET
     addGenericRule("fake_anydesk_dotnet", R"(
 import "pe"
 rule fake_anydesk_dotnet {
     strings:
-        $anydesk = "AnyDesk" nocase
-        $mscoree = "mscoree.dll" nocase
-        $runtime = "Runtime" nocase
+        $anydesk = "AnyDesk" nocase ascii wide
     condition:
-        pe.is_pe and $anydesk and ($mscoree or $runtime) and 
+        uint16(0) == 0x5A4D and pe.is_pe and $anydesk and
         (pe.imports("mscoree.dll", "_CorExeMain") or pe.imports("mscoree.dll", "_CorDllMain"))
 })");
 
+    // 6. AnyDesk + features de cheat
     addGenericRule("anydesk_cheat_bruxomem", R"(
 rule anydesk_cheat_bruxomem {
     strings:
-        $anydesk = "AnyDesk" nocase
-        $fody = "ProcessedByFody" nocase
-        $bruxo = "BruxoMem" nocase
-        $aimbot = "Aimboton" nocase
-        $aobscan = "AoBScan" nocase
-        $camhack = "Camera Hack" nocase
-        $galib = "Red.GALIB" nocase
-        $antivm1 = "VBoxMouse.sys" nocase
-        $antivm2 = "VMware Tools" nocase
-        $antivm3 = "virtual machine" nocase
-        $harmony = "0Harmony.dll" nocase
-        $obfuscator = "Inx .NET Obfuscator" nocase
-        $hdplayer = "HD-Player.exe" nocase
+        $anydesk = "AnyDesk" nocase ascii wide
+        $fody = "ProcessedByFody" ascii wide
+        $bruxo = "BruxoMem" nocase ascii wide
+        $aimbot = "Aimboton" nocase ascii wide
+        $aobscan = "AoBScan" nocase ascii wide
+        $camhack = "Camera Hack" nocase ascii wide
+        $galib = "Red.GALIB" nocase ascii wide
+        $antivm1 = "VBoxMouse.sys" nocase ascii wide
+        $antivm2 = "VMware Tools" nocase ascii wide
+        $harmony = "0Harmony.dll" nocase ascii wide
+        $obfuscator = "Inx .NET Obfuscator" ascii wide
+        $hdplayer = "HD-Player.exe" nocase ascii wide
     condition:
-        $anydesk and 2 of ($fody, $bruxo, $aimbot, $aobscan, $camhack, $galib, $antivm*, $harmony, $obfuscator, $hdplayer)
+        uint16(0) == 0x5A4D and $anydesk and
+        2 of ($fody, $bruxo, $aimbot, $aobscan, $camhack, $galib, $antivm*, $harmony, $obfuscator, $hdplayer)
 })");
 
-    addGenericRule("HIGH_ENTROPY", R"(
-import "math"
-rule HIGH_ENTROPY {
-    condition:
-        math.entropy(0, filesize) > 7.0
-})");
-
-    addGenericRule("HIGH_ENTROPY_SECTION", R"(
-import "pe"
-import "math"
-rule HIGH_ENTROPY_SECTION {
-    condition:
-        for any section in pe.sections : (
-            math.entropy(section.raw_data_offset, section.raw_data_size) > 7.0
-        )
-})");
-
+    // 9. Frameworks de hook / injecao / drivers vulneraveis
     addGenericRule("cheat_frameworks", R"(
+import "pe"
+
 rule cheat_frameworks
 {
   meta:
-    description = "Frameworks universais de cheats, hooks e mappers"
+    description = "Hook/injecao/mapper (alta) - ImGui sozinho NAO cai aqui"
   strings:
-    $imgui1 = "Dear ImGui" nocase
-    $imgui2 = "ImGui::CreateContext" nocase
-    $imgui3 = "ProggyClean.ttf" nocase
-    $imgui4 = "imgui_impl_win32" nocase
-    $imgui5 = "imgui_impl_dx11" nocase
-    $imgui6 = "imgui_impl_opengl" nocase
+    $imgui1 = "ImGui" ascii
+    $imgui2 = "imgui.ini" ascii
+    $imgui3 = "##OverlayWindow" ascii
+    $imgui4 = "ImGui_ImplDX11_" ascii
+    $imgui5 = "ImGui_ImplWin32_" ascii
 
-    $hook1 = "MH_Initialize" nocase
-    $hook2 = "MH_CreateHook" nocase
-    $hook3 = "kiero::init" nocase
-    $hook4 = "kiero::bind" nocase
-    $hook5 = "DetourTransactionBegin" nocase
-    $hook6 = "DetourAttach" nocase
+    $hk1 = "MH_CreateHook" ascii
+    $hk2 = "MH_EnableHook" ascii
+    $hk3 = "MH_Initialize" ascii
+    $hk4 = "kiero::" ascii
+    $hk5 = "kiero" ascii fullword
+    $hk6 = "DetourAttach" ascii
+    $hk7 = "DetourTransactionBegin" ascii
+    $hk8 = "PLH::" ascii
+    $hk9 = "safetyhook" ascii
+    $hk10 = "hkPresent" ascii
+    $hk11 = "oPresent" ascii fullword
+    $hk12 = "hkEndScene" ascii
+    $hk13 = "hkResizeBuffers" ascii
 
-    $map1 = "kdmapper" nocase
-    $map2 = "drvmap" nocase
-    $map3 = "iqvw64e.sys" nocase
-    $map4 = "gdrv.sys" nocase
-    $map5 = "mhyprot2.sys" nocase
-    $map6 = "RTCore64.sys" nocase
+    $drv1 = "kdmapper" nocase ascii wide
+    $drv2 = "drvmap" nocase ascii wide
+    $drv3 = "iqvw64e.sys" nocase ascii wide
+    $drv4 = "gdrv.sys" nocase ascii wide
+    $drv5 = "mhyprot2.sys" nocase ascii wide
+    $drv6 = "RTCore64.sys" nocase ascii wide
+    $drv7 = "dbutil_2_3.sys" nocase ascii wide
+    $drv8 = "AsrDrv10" nocase ascii wide
+    $drv9 = "WinRing0x64.sys" nocase ascii wide
+    $drv10 = "capcom.sys" nocase ascii wide
+    $drv11 = "MapDriver" ascii wide
+    $drv12 = "isDriverMapped" ascii wide
 
+    $inj1 = "VirtualAllocEx" ascii
+    $inj2 = "WriteProcessMemory" ascii
+    $inj3 = "NtCreateThreadEx" ascii
+    $inj4 = "CreateRemoteThread" ascii
+    $inj5 = "LdrLoadDll" ascii
+    $inj6 = "manualmap" nocase ascii wide
+    $inj7 = "ManualMapDll" nocase ascii wide
   condition:
-    2 of ($imgui*) or any of ($hook*) or any of ($map*)
+    uint16(0) == 0x5A4D and pe.is_pe and
+    (
+      2 of ($drv*) or
+      ($drv1 or $drv2 or $drv11 or $drv12) or
+      (2 of ($imgui*) and (any of ($hk*) or 2 of ($inj*))) or
+      (2 of ($hk*) and 2 of ($inj*)) or
+      ($inj1 and $inj2 and ($inj3 or $inj4) and ($inj6 or $inj7))
+    )
 }
 )");
 
+    // 10. Free Fire / emulador
     addGenericRule("freefire_cheat_bypass", R"(
 rule freefire_cheat_bypass
 {
   meta:
-    description = "Deteccao de cheats, AOB scanners e bypasses para Free Fire em emuladores"
+    description = "Cheat Free Fire / emulador"
   strings:
-    $emu1 = "HD-Player.exe" nocase
-    $emu2 = "dnplayer.exe" nocase
-    $emu3 = "LdVBoxHeadless.exe" nocase
-    $emu4 = "TitanEngine.exe" nocase
-    $emu5 = "AndroidProcess.exe" nocase
-    $emu6 = "MEmuConsole.exe" nocase
-    $emu7 = "SmartGaGa" nocase
+    $emu1 = "HD-Player.exe" nocase ascii wide
+    $emu2 = "HD-Player" nocase ascii wide
+    $emu3 = "BlueStacks" nocase ascii wide
+    $emu4 = "MSI App Player" nocase ascii wide
+    $emu5 = "LdVBoxHeadless" nocase ascii wide
+    $emu6 = "dnplayer.exe" nocase ascii wide
+    $emu7 = "MEmuHeadless" nocase ascii wide
+    $emu8 = "AndroidProcess.exe" nocase ascii wide
 
-    $pkg1 = "com.dts.freefireth" nocase
-    $pkg2 = "com.dts.freefiremax" nocase
-    $pkg3 = "libil2cpp.so" nocase
-    $pkg4 = "libunity.so" nocase
+    $pkg1 = "com.dts.freefireth" nocase ascii wide
+    $pkg2 = "com.dts.freefiremax" nocase ascii wide
+    $pkg3 = "libil2cpp.so" nocase ascii wide
+    $pkg4 = "libunity.so" nocase ascii wide
 
-    $feat1 = "BruxoMem" nocase
-    $feat2 = "Aimboton" nocase
-    $feat3 = "AoBScan" nocase
-    $feat4 = "Camera Hack" nocase
-    $feat5 = "antena" nocase
-    $feat6 = "holograma" nocase
-    $feat7 = "bala magica" nocase
-    $feat8 = "magic bullet" nocase
-    $feat9 = "headshot 100%" nocase
-    $feat10 = "bypass emulador" nocase
-    $feat11 = "bypass mobile" nocase
-    $feat12 = "bypass ff" nocase
-    $feat13 = "fake device" nocase
-    $feat14 = "vboxmouse.sys" nocase
-    $feat15 = "vboxguest.sys" nocase
-    $feat16 = "mod menu ff" nocase
-    $feat17 = "regedit ff" nocase
-    $feat18 = "sensi ff" nocase
-    $feat19 = "auxilio de mira" nocase
-    $feat20 = "falconmem" nocase
-    $feat21 = "Memory.dll" nocase
+    $feat1  = "aimbot" nocase ascii wide
+    $feat2  = "aimlock" nocase ascii wide
+    $feat3  = "headshot" nocase ascii wide
+    $feat4  = "wallhack" nocase ascii wide
+    $feat5  = "esp line" nocase ascii wide
+    $feat6  = "esp box" nocase ascii wide
+    $feat7  = "chams" nocase ascii wide fullword
+    $feat8  = "antena" nocase ascii wide fullword
+    $feat9  = "holograma" nocase ascii wide
+    $feat10 = "bala magica" nocase ascii wide
+    $feat11 = "bala m\xc3\xa1gica" nocase ascii
+    $feat12 = "magic bullet" nocase ascii wide
+    $feat13 = "no recoil" nocase ascii wide
+    $feat14 = "speed hack" nocase ascii wide
+    $feat15 = "telekill" nocase ascii wide
+    $feat16 = "fly hack" nocase ascii wide
+    $feat17 = "cam hack" nocase ascii wide
+    $feat18 = "camera hack" nocase ascii wide
+    $feat19 = "AoBScan" nocase ascii wide
+    $feat20 = "BruxoMem" nocase ascii wide
+    $feat21 = "Aimboton" nocase ascii wide
+    $feat22 = "falconmem" nocase ascii wide
+    $feat23 = "Memory.dll" nocase ascii wide
+    $feat24 = "bypass emulador" nocase ascii wide
+    $feat25 = "bypass ff" nocase ascii wide
+    $feat26 = "auxilio de mira" nocase ascii wide
+    $feat27 = "sensi ff" nocase ascii wide
+    $feat28 = "mod menu" nocase ascii wide
+    $feat29 = "fake device" nocase ascii wide
 
+    $api1 = "VirtualQueryEx" ascii
+    $api2 = "ReadProcessMemory" ascii
+    $api3 = "WriteProcessMemory" ascii
   condition:
     (any of ($emu*) and any of ($feat*)) or
     (any of ($pkg*) and any of ($feat*)) or
-    2 of ($feat*)
+    (any of ($emu*) and $api1 and ($api2 or $api3) and any of ($pkg*)) or
+    3 of ($feat*)
+}
+)");
+
+    // NOVA: XISFPS / XFPS
+    addGenericRule("X1", R"(
+rule X1
+{
+  meta:
+    description = "IOCs XISFPS/XFPS (painel ESP/aimbot, DriverCom, SystemX.evtx)"
+  strings:
+    $st1 = "XISFPS" nocase ascii wide
+    $st2 = "SystemX.evtx" nocase ascii wide
+    $st3 = "zimo.br" nocase ascii wide
+    $st4 = "99ECF177DA86CB646CDF9A7910275CDC07A42AA3" nocase ascii wide
+    $st5 = { 99 EC F1 77 DA 86 CB 64 6C DF 9A 79 10 27 5C DC 07 A4 2A A3 }
+    $drvcom = "DriverCom" ascii wide
+    $api1 = "/api/espdata" ascii wide
+    $api2 = "/api/aimbotswap" ascii wide
+    $api3 = "/api/reloadaimbind" ascii wide
+    $api4 = "/api/disable_all" ascii wide
+    $w1 = "esp_started" ascii wide
+    $w2 = "offsets_ok" ascii wide
+    $w3 = "destruct_result" ascii wide
+    $w4 = "windowshome" ascii wide
+  condition:
+    any of ($st*) or
+    ($drvcom and any of ($api*)) or
+    2 of ($api*, $w*)
 }
 )");
 
