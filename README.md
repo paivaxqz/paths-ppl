@@ -46,23 +46,28 @@ Fluxo único em C++ (`pplscan.exe`): dump → paths → analyzer `paths` → con
 
 ## path extraction (csrss)
 
-`pplscan` varre as regiões `MINIDUMP_MEMORY64` em **UTF-16LE** e **ASCII/ANSI (cp1252)**.
+`pplscan` varre as regioes `MINIDUMP_MEMORY64` em **UTF-16LE** e **ASCII/ANSI (cp1252)**.
 
 Regex-equivalente (case-insensitive):
 
 ```
 (?<![A-Za-z0-9])
 (?:
-    (?:\\\?\|\\\.\|\\?\?\)?[A-Za-z]:[\\/]
+    (?:\\\\\?\\|\\\\\.\\|\\\?\?\\)?[A-Za-z]:[\\/]
   | \\Device\\HarddiskVolume\d+\\
   | \\SystemRoot\\ | %SystemRoot%\\ | %windir%\\
-  | \\\\[A-Za-z0-9._$-]{1,63}\\[^\\/:*?"<>|]+\\
+  | \\\\[^\\/:*?\"<>|]{1,63}\\[^\\/:*?\"<>|]+\\
 )
-(?:[^\x00-\x1F\\/:*?"<>|]{1,255}[\\/]){0,63}
-[^\x00-\x1F\\/:*?"<>|]{1,250}\.[A-Za-z0-9]{2,8}
+(?:[^\x00-\x1F\\/:*?\"<>|]{1,255}[\\/]){0,63}
+[^\x00-\x1F\\/:*?\"<>|]{1,250}\.[A-Za-z0-9]{2,8}
 ```
 
-Normalização: `\Device\HarddiskVolumeN\` → letra via `QueryDosDeviceW`; `\SystemRoot\` / `%windir%` → `GetWindowsDirectoryW`; `\?\C:\` / `\??\C:\` → `C:\`. Dedup case-insensitive (hash). Extensões executáveis (`.dll` `.exe` `.sys` …) saem primeiro em `paths.txt`. Só paths com **arquivo + extensão** (2–8 alnum, ≥1 letra); pastas e lixo tipo `C:\Windows;C` / `.79` / `*.exe.Local` são descartados.
+Extras: extensao com >=1 letra e 2-8 chars (rejeita `.79` / `.e`); rejeita `*.exe.Local`;
+segmentos <=255 / <=64 niveis; trim de espacos/pontos finais; UTF-16 so BMP latino.
 
-Modo de teste: `pplscan.exe --paths-only [saida.txt]` (compara com o extrator legado em `saida.txt.old`).
+Normalizacao: `\Device\HarddiskVolumeN\` -> letra via `QueryDosDeviceW`;
+`\SystemRoot\` / `%windir%` -> `GetWindowsDirectoryW`; `\\?\C:\` / `\??\C:\` -> `C:\`.
+Dedup case-insensitive (hash). Extensoes hot (`.dll` `.exe` `.sys` `.scr` `.cpl` `.ocx` `.tmp` `.dat` `.bin` ...) saem primeiro.
+
+Teste: `pplscan.exe --paths-only [saida.txt]` (tambem grava `saida.txt.old` com o extrator legado).
 
