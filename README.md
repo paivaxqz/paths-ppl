@@ -14,7 +14,7 @@ dumps protected process memory via PPL bypass (WerFaultSecure technique). target
 
 builds with MSVC (`cl`). see `src/exploit/build_*.bat`.
 
-## paths-parser (npmuriel)
+## paths-parser (paths)
 
 parses filesystem paths and matches against embedded YARA rules for known cheat signatures, bypass frameworks, and suspicious tooling.
 

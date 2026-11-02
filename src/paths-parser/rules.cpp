@@ -54,7 +54,7 @@ rule cheat
   meta:
     description = "Specifics B - TODO: refazer strings"
   strings:
-    $todo = "__NPMURIEL_TODO_PLACEHOLDER__"
+    $todo = "__PATHS_TODO_PLACEHOLDER__"
   condition:
     false and $todo
 }
