@@ -1,4 +1,4 @@
-#include "Include.h"
+﻿#include "Include.h"
 #include "yara.h" 
 #include <filesystem>
 #include <sstream> 
@@ -48,7 +48,7 @@ int yara_callback(YR_SCAN_CONTEXT* context, int message, void* message_data, voi
 void initializeGenericRules() {
 
     // 1. TODO: placeholder - preencher com as strings novas. Mantido compilando (condition false).
-    addGenericRule("Specifics B", R"(
+    addGenericRule("Specifics B", R"YR(
 rule cheat
 {
   meta:
@@ -58,10 +58,10 @@ rule cheat
   condition:
     false and $todo
 }
-)");
+)YR");
 
     // 2 + 7 + 8 unificadas: entropy do arquivo inteiro OU de alguma secao PE
-    addGenericRule("entropy", R"(
+    addGenericRule("entropy", R"YR(
 import "pe"
 import "math"
 
@@ -80,10 +80,10 @@ rule entropy
       )
     )
 }
-)");
+)YR");
 
     // 3. Packers
-    addGenericRule("murielson", R"(
+    addGenericRule("murielson", R"YR(
 import "pe"
 
 rule empacotamentoruim
@@ -115,10 +115,10 @@ rule empacotamentoruim
       any of ($aspack, $pecompact, $enigma, $obsidium) in (0..0x2000)
     )
 }
-)");
+)YR");
 
     // 4. Obfuscators .NET (1 marcador forte OU 2 fracos)
-    addGenericRule("Obfuscated__FakeSignatures", R"(
+    addGenericRule("Obfuscated__FakeSignatures", R"YR(
 import "pe"
 
 rule Obfuscated__FakeSignatures
@@ -161,10 +161,10 @@ rule Obfuscated__FakeSignatures
      pe.data_directories[14].virtual_address != 0) and
     (any of ($s*) or 2 of ($w*))
 }
-)");
+)YR");
 
     // 5. AnyDesk fake em .NET
-    addGenericRule("fake_anydesk_dotnet", R"(
+    addGenericRule("fake_anydesk_dotnet", R"YR(
 import "pe"
 rule fake_anydesk_dotnet {
     strings:
@@ -172,10 +172,10 @@ rule fake_anydesk_dotnet {
     condition:
         uint16(0) == 0x5A4D and pe.is_pe and $anydesk and
         (pe.imports("mscoree.dll", "_CorExeMain") or pe.imports("mscoree.dll", "_CorDllMain"))
-})");
+})YR");
 
     // 6. AnyDesk + features de cheat
-    addGenericRule("anydesk_cheat_bruxomem", R"(
+    addGenericRule("anydesk_cheat_bruxomem", R"YR(
 rule anydesk_cheat_bruxomem {
     strings:
         $anydesk = "AnyDesk" nocase ascii wide
@@ -193,10 +193,10 @@ rule anydesk_cheat_bruxomem {
     condition:
         uint16(0) == 0x5A4D and $anydesk and
         2 of ($fody, $bruxo, $aimbot, $aobscan, $camhack, $galib, $antivm*, $harmony, $obfuscator, $hdplayer)
-})");
+})YR");
 
     // 9. Frameworks de hook / injecao / drivers vulneraveis
-    addGenericRule("cheat_frameworks", R"(
+    addGenericRule("cheat_frameworks", R"YR(
 import "pe"
 
 rule cheat_frameworks
@@ -254,10 +254,10 @@ rule cheat_frameworks
       ($inj1 and $inj2 and ($inj3 or $inj4) and ($inj6 or $inj7))
     )
 }
-)");
+)YR");
 
     // 10. Free Fire / emulador
-    addGenericRule("freefire_cheat_bypass", R"(
+    addGenericRule("freefire_cheat_bypass", R"YR(
 rule freefire_cheat_bypass
 {
   meta:
@@ -316,10 +316,10 @@ rule freefire_cheat_bypass
     (any of ($emu*) and $api1 and ($api2 or $api3) and any of ($pkg*)) or
     3 of ($feat*)
 }
-)");
+)YR");
 
     // NOVA: XISFPS / XFPS
-    addGenericRule("X1", R"(
+    addGenericRule("X1", R"YR(
 rule X1
 {
   meta:
@@ -344,7 +344,7 @@ rule X1
     ($drvcom and any of ($api*)) or
     2 of ($api*, $w*)
 }
-)");
+)YR");
 
 }
 
