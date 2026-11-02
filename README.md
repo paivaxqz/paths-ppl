@@ -9,6 +9,7 @@ two modules:
 dumps protected process memory via PPL bypass (WerFaultSecure technique). targets csrss for artifact extraction.
 
 - `pplscan.exe` — main scanner. launches WerFaultSecure as WinTcb-Light, inherits handles from csrss, dumps memory regions and runs pattern matching.
+- **build note:** embed the legacy `WerFaultSecure.exe` **6.3.x** (Win8.1, e.g. `6.3.9600.17415`). Modern `10.x` only fills `/encfile` and leaves the plaintext `/file` empty → `dump invalid or encrypted`.
 - `ppldump.exe` — standalone PPL dumper.
 - `regctl.exe` / `elevate.exe` — privilege escalation helpers (TrustedInstaller token, COM elevation).
 
