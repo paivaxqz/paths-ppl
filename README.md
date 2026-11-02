@@ -59,15 +59,17 @@ Regex-equivalente (case-insensitive):
   | \\\\[^\\/:*?\"<>|]{1,63}\\[^\\/:*?\"<>|]+\\
 )
 (?:[^\x00-\x1F\\/:*?\"<>|]{1,255}[\\/]){0,63}
-[^\x00-\x1F\\/:*?\"<>|]{1,250}\.[A-Za-z0-9]{2,8}
+[^\x00-\x1F\\/:*?\"<>|]{1,250}(?:\.[A-Za-z0-9_~-]{1,12})?
 ```
 
-Extras: extensao com >=1 letra e 2-8 chars (rejeita `.79` / `.e`); rejeita `*.exe.Local`;
+Extras: extensao 1-12 chars `[A-Za-z0-9_~-]` com >=1 letra; extensao so numerica (`.001`) e
+arquivo **sem extensao** (nome 3-64 chars, maioria letras) so quando bem formado (`X:\` + >=2 pastas);
+rejeita `*.exe.Local`; **`.zip` `.rar` `.7z` sao descartados**;
 segmentos <=255 / <=64 niveis; trim de espacos/pontos finais; UTF-16 so BMP latino.
 
 Normalizacao: `\Device\HarddiskVolumeN\` -> letra via `QueryDosDeviceW`;
 `\SystemRoot\` / `%windir%` -> `GetWindowsDirectoryW`; `\\?\C:\` / `\??\C:\` -> `C:\`.
-Dedup case-insensitive (hash). Extensoes hot (`.dll` `.exe` `.sys` `.scr` `.cpl` `.ocx` `.tmp` `.dat` `.bin` ...) saem primeiro.
+Dedup case-insensitive (hash). Extensoes hot (`.dll` `.exe` `.sys` `.scr` `.cpl` `.ocx` `.tmp` `.dat` `.bin` `.pyd` `.node` `.xll` `.ax` `.mui` `.winmd` `.tsp` `.ahk` `.au3` `.py` `.hta` `.wsf` `.lnk` `.reg` `.apk` `.xapk` `.so` `.dll_` `.exe~` ...) saem primeiro.
 
 Teste: `pplscan.exe --paths-only [saida.txt]` (tambem grava `saida.txt.old` com o extrator legado).
 
